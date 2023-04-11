@@ -7,9 +7,9 @@ import (
 )
 
 type BaseVO struct {
-	code int    `json:"code"`
-	msg  string `json:"msg"`
-	data any    `json:"data"`
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data any    `json:"data"`
 }
 
 func SucJson(ctx *gin.Context, data any) {

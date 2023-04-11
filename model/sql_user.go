@@ -8,3 +8,5 @@ const sql_user_create = `create table if not exists user (
 	account varchar(50) not null,
 	passwrod varchar(30) not null
 )`
+
+const sql_user_add = ``

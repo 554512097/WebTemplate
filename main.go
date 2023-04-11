@@ -5,6 +5,7 @@ import (
 	"main/handler"
 	"main/logger"
 	"main/model"
+	"main/params"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,7 @@ func main() {
 		log.Println("database init failed")
 	}
 	e := gin.Default()
-	handler.InitUserRouter(*e)
+	params.InitCustomValidator()
+	handler.InitRouter(*e)
 	e.Run(":8080")
 }
