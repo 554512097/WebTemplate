@@ -1,24 +1,24 @@
 package model
 
 import (
-	"database/sql"
-	"log"
-
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
-var gloableDB *sql.DB
+var GloableDB *gorm.DB
 
-func InitDataBase() (bool, error) {
-	db, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/goon")
+func InitDB() error {
+	db, err := gorm.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/goon?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
-		return false, err
+		return err
 	}
-	gloableDB = db
-	_, err2 := db.Exec(sql_user_create)
-	if err2 != nil {
-		return false, err2
-	}
-	log.Println("table user created!")
-	return true, nil
+	GloableDB = db
+	db.DB().SetMaxIdleConns(10)
+	db.DB().SetMaxOpenConns(100)
+	// 启用Logger，显示详细日志
+	db.LogMode(true)
+
+	//创建表
+	db.CreateTable(&User{})
+	return nil
 }

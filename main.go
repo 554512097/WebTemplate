@@ -12,10 +12,10 @@ import (
 
 func main() {
 	logger.InitLogger()
-	b, err := model.InitDataBase()
-	if err != nil || !b {
-		log.Printf("err: %v\n", err)
-		log.Println("database init failed")
+	err := model.InitDB()
+	if err != nil {
+		log.Printf("database init failed, err: %v\n", err)
+		return
 	}
 	e := gin.Default()
 	params.InitCustomValidator()

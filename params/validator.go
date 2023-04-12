@@ -22,8 +22,12 @@ func InitCustomValidator() bool {
 }
 
 func phoneValid(fl validator.FieldLevel) bool {
+	phone := fl.Field().String()
+	if len(phone) == 0 {
+		return true
+	}
 	// 生成手机号校验的正则表达式
 	phoneRegexp := `^1[3456789]\d{9}$`
 	// 使用正则表达式验证手机号
-	return regexp.MustCompile(phoneRegexp).MatchString(fl.Field().String())
+	return regexp.MustCompile(phoneRegexp).MatchString(phone)
 }
