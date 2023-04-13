@@ -8,6 +8,8 @@ import (
 	"main/params"
 
 	"github.com/gin-gonic/gin"
+	gs "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 func main() {
@@ -18,6 +20,7 @@ func main() {
 		return
 	}
 	e := gin.Default()
+	e.GET("/swagger/*any", gs.WrapHandler(swaggerFiles.Handler))
 	params.InitCustomValidator()
 	handler.InitRouter(*e)
 	e.Run(":8080")
