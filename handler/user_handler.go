@@ -8,6 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @BasePath /user
+
+// 注册
+// @Summary 注册接口
+// @Schemes
+// @Description 用户注册
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Helloworld
+// @Router /user/register [get]
 func register(ctx *gin.Context) {
 	modifyUser(ctx, false)
 }
