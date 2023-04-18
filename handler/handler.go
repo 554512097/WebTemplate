@@ -17,15 +17,13 @@ func InitRouter(e gin.Engine) {
 }
 
 func initUserRouter(e gin.Engine) {
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	v1 := e.Group("/api/v1")
+	docs.SwaggerInfo.BasePath = "/"
+	ug := e.Group("/user")
 	{
-		ug := v1.Group("/user")
-		{
-			ug.POST("/register", register)
-			ug.POST("/login", login)
-			ug.POST("/update", updateUser)
-		}
+		ug.POST("/register", register)
+		ug.POST("/login", login)
+		ug.POST("/update", updateUser)
+		ug.POST("/info/:id", userinfo)
 	}
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }

@@ -1,19 +1,54 @@
+definitions:
+  model.User:
+    properties:
+      account:
+        maxLength: 50
+        type: string
+      address:
+        type: string
+      age:
+        type: integer
+      id:
+        type: integer
+      introduce:
+        type: string
+      nick:
+        maxLength: 50
+        type: string
+      password:
+        maxLength: 30
+        minLength: 6
+        type: string
+      phone:
+        type: string
+    required:
+    - account
+    - nick
+    - password
+    type: object
 info:
   contact: {}
 paths:
   /user/register:
-    get:
+    post:
       consumes:
       - application/json
       description: 用户注册
+      parameters:
+      - description: 用户模型
+        in: body
+        name: 参数
+        required: true
+        schema:
+          $ref: '#/definitions/model.User'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/model.User'
       summary: 注册接口
       tags:
-      - example
+      - register
 swagger: "2.0"

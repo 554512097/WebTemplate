@@ -4,6 +4,7 @@ import (
 	"log"
 	"main/model"
 	"main/net"
+	"main/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,11 +15,12 @@ import (
 // @Summary 注册接口
 // @Schemes
 // @Description 用户注册
-// @Tags example
+// @Tags register
+// @Param 参数 body model.User true "用户模型"
 // @Accept json
 // @Produce json
-// @Success 200 {string} Helloworld
-// @Router /user/register [get]
+// @Success 200 {object} model.User
+// @Router /user/register [post]
 func register(ctx *gin.Context) {
 	modifyUser(ctx, false)
 }
@@ -31,14 +33,25 @@ func login(ctx *gin.Context) {
 	err = defaultValidator().Var(account, "required,max=50")
 	err = defaultValidator().Var(password, "required,max=30")
 	if err != nil {
-		log.Printf("err: %v\n", err)
+		log.Printf("校验错误: %v\n", err)
 		net.FailJson(ctx, net.CODE_FAILED, "参数校验出错")
 		return
 	}
-	net.SucJson(ctx, gin.H{
-		"account":  account,
-		"password": password,
-	})
+	u := model.User{}
+	err2 := model.GloableDB.Where("account = ?", account).First(&u).Error
+	if err2 != nil {
+		log.Printf("查询错误: %v\n", err2)
+		net.FailJson(ctx, net.CODE_FAILED, "用户不存在")
+		return
+	}
+	token, err3 := utils.GenerateJWT(u.ID)
+	if err3 != nil {
+		log.Printf("token错误: %v\n", err3)
+		net.FailJson(ctx, net.CODE_FAILED, err3.Error())
+		return
+	}
+	ctx.Header("token", token)
+	net.SucJson(ctx, u)
 }
 
 func updateUser(ctx *gin.Context) {
@@ -54,12 +67,18 @@ func modifyUser(ctx *gin.Context, isModify bool) {
 		return
 	}
 	if !isModify && len(userParams.Nick) == 0 {
-		userParams.Nick = "用户" + userParams.Nick
+		userParams.Nick = "用户" + userParams.Account
 	}
 	var dbError error
 	if isModify {
-		dbError = model.GloableDB.Update().Error
+		dbError = model.GloableDB.Update(&userParams).Error
 	} else {
+		u := model.User{}
+		e := model.GloableDB.Where("account = ?", userParams.Account).First(&u).Error
+		if e == nil {
+			net.FailJson(ctx, net.CODE_FAILED, "用户已存在")
+			return
+		}
 		dbError = model.GloableDB.Create(&userParams).Error
 	}
 	if dbError != nil {
@@ -68,4 +87,32 @@ func modifyUser(ctx *gin.Context, isModify bool) {
 		return
 	}
 	net.SucJson(ctx, userParams)
+}
+
+// Userinfo
+// @Summary 获取用户信息接口
+// @Schemes
+// @Description 获取用户信息
+// @Tags userinfo
+// @Param id path int true "用户ID"
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.User
+// @Router /user/info/{id} [get]
+func userinfo(ctx *gin.Context) {
+	id := ctx.Param("id")
+	err := defaultValidator().Var(id, "required,numeric")
+	if err != nil {
+		log.Printf("err: %v\n", err)
+		net.FailJson(ctx, net.CODE_FAILED, "参数校验出错")
+		return
+	}
+	var user model.User
+	dbError := model.GloableDB.Where("id = ?", id).First(&user).Error
+	if dbError != nil {
+		log.Printf("err: %v\n", dbError)
+		net.FailJson(ctx, net.CODE_FAILED, dbError.Error())
+		return
+	}
+	net.SucJson(ctx, user)
 }
