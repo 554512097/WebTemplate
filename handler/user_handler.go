@@ -32,9 +32,6 @@ type loginParams struct {
 }
 
 func login(ctx *gin.Context) {
-	account := ctx.PostForm("account")
-	password := ctx.PostForm("password")
-
 	lp := loginParams{}
 	if err := ctx.ShouldBind(&lp); err != nil {
 		log.Printf("校验错误: %v\n", err)
@@ -42,13 +39,13 @@ func login(ctx *gin.Context) {
 		return
 	}
 	u := model.User{}
-	err2 := model.GloableDB.Where("account = ?", account).First(&u).Error
+	err2 := model.GloableDB.Where("account = ?", lp.account).First(&u).Error
 	if err2 != nil {
 		log.Printf("查询错误: %v\n", err2)
 		net.FailJson(ctx, net.CODE_FAILED, "用户不存在")
 		return
 	}
-	if strings.Compare(u.Password, password) != 0 {
+	if strings.Compare(u.Password, lp.password) != 0 {
 		net.FailJson(ctx, net.CODE_FAILED, "密码不正确")
 		return
 	}
@@ -109,14 +106,15 @@ func modifyUser(ctx *gin.Context, isModify bool) {
 // @Router /user/info/{id} [get]
 func userinfo(ctx *gin.Context) {
 	token := ctx.Request.Header.Get("token")
-	mc, err := utils.VerifyJWT(token)
+	tc, err := utils.VerifyJWT(token)
 	if err != nil {
 		log.Printf("err: %v\n", err)
 		net.FailJson(ctx, net.CODE_FAILED, "token不合法")
 		return
 	}
+	log.Printf("tc: %v\n", *tc)
 	var user model.User
-	dbError := model.GloableDB.Where("id = ?", mc["userId"]).First(&user).Error
+	dbError := model.GloableDB.Where("id = ?", (*tc)["UserId"]).First(&user).Error
 	if dbError != nil {
 		log.Printf("err: %v\n", dbError)
 		net.FailJson(ctx, net.CODE_FAILED, dbError.Error())
