@@ -5,6 +5,7 @@ import (
 	"main/model"
 	"main/net"
 	"main/utils"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,14 +26,17 @@ func register(ctx *gin.Context) {
 	modifyUser(ctx, false)
 }
 
+type loginParams struct {
+	account  string `binding:"required,max=50" form:"account"`
+	password string `binding:"required,max=30" form:"password"`
+}
+
 func login(ctx *gin.Context) {
 	account := ctx.PostForm("account")
 	password := ctx.PostForm("password")
 
-	var err error
-	err = defaultValidator().Var(account, "required,max=50")
-	err = defaultValidator().Var(password, "required,max=30")
-	if err != nil {
+	lp := loginParams{}
+	if err := ctx.ShouldBind(&lp); err != nil {
 		log.Printf("校验错误: %v\n", err)
 		net.FailJson(ctx, net.CODE_FAILED, "参数校验出错")
 		return
@@ -42,6 +46,10 @@ func login(ctx *gin.Context) {
 	if err2 != nil {
 		log.Printf("查询错误: %v\n", err2)
 		net.FailJson(ctx, net.CODE_FAILED, "用户不存在")
+		return
+	}
+	if strings.Compare(u.Password, password) != 0 {
+		net.FailJson(ctx, net.CODE_FAILED, "密码不正确")
 		return
 	}
 	token, err3 := utils.GenerateJWT(u.ID)
@@ -100,15 +108,15 @@ func modifyUser(ctx *gin.Context, isModify bool) {
 // @Success 200 {object} model.User
 // @Router /user/info/{id} [get]
 func userinfo(ctx *gin.Context) {
-	id := ctx.Param("id")
-	err := defaultValidator().Var(id, "required,numeric")
+	token := ctx.Request.Header.Get("token")
+	mc, err := utils.VerifyJWT(token)
 	if err != nil {
 		log.Printf("err: %v\n", err)
-		net.FailJson(ctx, net.CODE_FAILED, "参数校验出错")
+		net.FailJson(ctx, net.CODE_FAILED, "token不合法")
 		return
 	}
 	var user model.User
-	dbError := model.GloableDB.Where("id = ?", id).First(&user).Error
+	dbError := model.GloableDB.Where("id = ?", mc["userId"]).First(&user).Error
 	if dbError != nil {
 		log.Printf("err: %v\n", dbError)
 		net.FailJson(ctx, net.CODE_FAILED, dbError.Error())

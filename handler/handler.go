@@ -4,8 +4,6 @@ import (
 	"main/docs"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
 
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -23,11 +21,7 @@ func initUserRouter(e gin.Engine) {
 		ug.POST("/register", register)
 		ug.POST("/login", login)
 		ug.POST("/update", updateUser)
-		ug.POST("/info/:id", userinfo)
+		ug.GET("/info", userinfo)
 	}
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-}
-
-func defaultValidator() *validator.Validate {
-	return binding.Validator.Engine().(*validator.Validate)
 }
